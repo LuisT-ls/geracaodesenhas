@@ -1,16 +1,21 @@
 # Gerador de Senhas Seguras
 
-Uma aplicação moderna e segura para geração de senhas, construída com Next.js 14, TypeScript e Tailwind CSS.
+Uma aplicação moderna e segura para geração de senhas, construída com Next.js 16, TypeScript e Tailwind CSS.
 
 ## 🚀 Características
 
 - ✅ Geração de senhas seguras e personalizáveis
-- ✅ Opções de customização (comprimento, tipos de caracteres)
-- ✅ Indicador de força da senha
+- ✅ Opções avançadas de customização (comprimento, tipos de caracteres, exclusão de ambíguos, etc.)
+- ✅ Analisador de força de senha com tempo estimado para quebrar
+- ✅ Gerador de senha WiFi com QR code
+- ✅ Gerador de PIN com opções de segurança
+- ✅ Gerador de passphrase
+- ✅ Glossário completo de segurança
 - ✅ Copiar senha para área de transferência
 - ✅ Interface responsiva e acessível
 - ✅ Suporte a modo escuro
 - ✅ Geração 100% local (sem envio de dados para servidores)
+- ✅ SEO otimizado (Open Graph, Twitter Cards, Structured Data)
 
 ## 🛠️ Tecnologias
 
@@ -28,13 +33,21 @@ Uma aplicação moderna e segura para geração de senhas, construída com Next.
 npm install
 ```
 
-2. Execute o servidor de desenvolvimento:
+2. (Opcional) Configure a variável de ambiente para SEO:
+
+Crie um arquivo `.env.local`:
+
+```env
+NEXT_PUBLIC_SITE_URL=https://seu-dominio.com
+```
+
+3. Execute o servidor de desenvolvimento:
 
 ```bash
 npm run dev
 ```
 
-3. Acesse [http://localhost:3000](http://localhost:3000) no seu navegador.
+4. Acesse [http://localhost:3000](http://localhost:3000) no seu navegador.
 
 ## 🏗️ Estrutura do Projeto
 
@@ -59,6 +72,30 @@ geracaodesenhas/
 - Nenhum dado é enviado para servidores externos
 - Validação de entrada com Zod
 - Geração criptograficamente segura usando `Math.random()`
+- Análise de segurança detalhada (entropia, tempo estimado para quebrar)
+
+## 🔍 SEO
+
+O projeto está otimizado para mecanismos de busca com:
+
+- **Metadata completa**: Títulos, descrições, keywords
+- **Open Graph**: Para compartilhamento em redes sociais
+- **Twitter Cards**: Otimização para Twitter
+- **Structured Data (JSON-LD)**: Schema.org para WebApplication e FAQPage
+- **Sitemap dinâmico**: Gerado automaticamente em `/sitemap.xml`
+- **Robots.txt**: Configurado em `/robots.ts`
+- **Semântica HTML**: Uso adequado de tags semânticas (header, section, etc.)
+- **Acessibilidade**: ARIA labels e estrutura semântica
+
+### Configuração de SEO
+
+Para otimizar completamente o SEO, configure a variável de ambiente:
+
+```env
+NEXT_PUBLIC_SITE_URL=https://seu-dominio.com
+```
+
+Isso garantirá que todas as URLs absolutas nos metadados estejam corretas.
 
 ## 📝 Scripts Disponíveis
 

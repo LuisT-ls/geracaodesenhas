@@ -1,0 +1,17 @@
+{
+  "name": "Gerador de Senhas Seguras",
+  "short_name": "Gerador Senhas",
+  "description": "Ferramentas completas de segurança: gerador de senhas, analisador, WiFi, PIN e passphrase",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#2563eb",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/favicon.ico",
+      "sizes": "any",
+      "type": "image/x-icon"
+    }
+  ]
+}
