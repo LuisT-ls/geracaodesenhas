@@ -116,7 +116,7 @@ export default function PinGenerator() {
       {/* PIN Gerado */}
       {pin && (
         <div className="bg-gray-50 dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-lg p-6">
-          <div className="flex items-center gap-3">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
             <input
               type="text"
               value={pin}
@@ -126,7 +126,7 @@ export default function PinGenerator() {
             />
             <button
               onClick={handleCopy}
-              className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+              className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 whitespace-nowrap"
             >
               {copied ? "✓ Copiado" : "Copiar"}
             </button>

@@ -330,15 +330,15 @@ export default function PasswordGenerator() {
       {/* Campo de Senha Gerada */}
       {currentPassword && (
         <div className="bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg p-4 space-y-4">
-          <div className="flex items-center gap-3">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
             <input
               type={showPassword ? "text" : "password"}
               value={currentPassword}
               readOnly
-              className="flex-1 px-4 py-3 bg-gray-50 dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-lg text-lg font-mono focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="flex-1 min-w-0 px-4 py-3 bg-gray-50 dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-lg text-lg font-mono focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent break-all"
               aria-label="Senha gerada"
             />
-            <div className="flex items-center gap-2">
+            <div className="flex items-center justify-center sm:justify-start gap-2 flex-shrink-0">
               <button
                 onClick={() => setShowPassword(!showPassword)}
                 className="p-2 text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -735,7 +735,7 @@ export default function PasswordGenerator() {
       {/* Senhas Múltiplas Geradas */}
       {passwords.length > 1 && (
         <div className="space-y-4">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
             <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 flex items-center gap-2">
               <svg
                 className="w-5 h-5 text-gray-600 dark:text-gray-400"
@@ -755,7 +755,7 @@ export default function PasswordGenerator() {
             </h2>
             <button
               onClick={handleCopyAll}
-              className="px-4 py-2 text-sm bg-gray-600 hover:bg-gray-700 text-white font-medium rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
+              className="px-4 py-2 text-sm bg-gray-600 hover:bg-gray-700 text-white font-medium rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 whitespace-nowrap self-start sm:self-auto"
             >
               {copiedIndex === -1 ? "✓ Todas Copiadas" : "Copiar Todas"}
             </button>
@@ -937,20 +937,22 @@ function PasswordCard({ password, analysis, index, onCopy, copied }: PasswordCar
   return (
     <div className="bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg p-4 space-y-3">
       {/* Senha Compacta */}
-      <div className="flex items-center gap-3">
-        <span className="text-sm font-medium text-gray-600 dark:text-gray-400 min-w-[2.5rem]">
-          #{index + 1}
-        </span>
-        <input
-          type="text"
-          value={password}
-          readOnly
-          className="flex-1 px-3 py-2 bg-gray-50 dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-lg text-sm font-mono focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-          aria-label={`Senha ${index + 1}`}
-        />
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+        <div className="flex items-center gap-2 flex-1 min-w-0">
+          <span className="text-sm font-medium text-gray-600 dark:text-gray-400 flex-shrink-0">
+            #{index + 1}
+          </span>
+          <input
+            type="text"
+            value={password}
+            readOnly
+            className="flex-1 min-w-0 px-3 py-2 bg-gray-50 dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-lg text-sm font-mono focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent break-all"
+            aria-label={`Senha ${index + 1}`}
+          />
+        </div>
         <button
           onClick={() => onCopy(password, index)}
-          className="p-2 text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+          className="p-2 sm:p-2 text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 flex-shrink-0 self-center sm:self-auto"
           aria-label={copied ? "Senha copiada" : "Copiar senha"}
           title={copied ? "Copiado!" : "Copiar senha"}
         >
