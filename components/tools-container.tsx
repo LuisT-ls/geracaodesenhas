@@ -6,8 +6,9 @@ import PasswordAnalyzer from "./password-analyzer";
 import WifiGenerator from "./wifi-generator";
 import PinGenerator from "./pin-generator";
 import PassphraseGenerator from "./passphrase-generator";
+import SecurityGlossary from "./security-glossary";
 
-type TabType = "generator" | "analyzer" | "wifi" | "pin" | "passphrase";
+type TabType = "generator" | "analyzer" | "wifi" | "pin" | "passphrase" | "glossary";
 
 export default function ToolsContainer() {
   const [activeTab, setActiveTab] = useState<TabType>("generator");
@@ -18,6 +19,7 @@ export default function ToolsContainer() {
     { id: "wifi" as TabType, label: "WiFi", icon: "📶" },
     { id: "pin" as TabType, label: "PIN", icon: "🔢" },
     { id: "passphrase" as TabType, label: "Passphrase", icon: "📝" },
+    { id: "glossary" as TabType, label: "Glossário", icon: "📚" },
   ];
 
   return (
@@ -49,6 +51,7 @@ export default function ToolsContainer() {
         {activeTab === "wifi" && <WifiGenerator />}
         {activeTab === "pin" && <PinGenerator />}
         {activeTab === "passphrase" && <PassphraseGenerator />}
+        {activeTab === "glossary" && <SecurityGlossary />}
       </div>
     </div>
   );
