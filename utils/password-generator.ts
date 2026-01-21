@@ -4,6 +4,10 @@ export interface PasswordOptions {
   includeLowercase: boolean;
   includeNumbers: boolean;
   includeSymbols: boolean;
+  excludeAmbiguous: boolean;
+  avoidRepeated: boolean;
+  startWithUppercase: boolean;
+  endWithNumber: boolean;
 }
 
 const LOWERCASE = "abcdefghijklmnopqrstuvwxyz";
@@ -11,11 +15,54 @@ const UPPERCASE = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 const NUMBERS = "0123456789";
 const SYMBOLS = "!@#$%^&*()_+-=[]{}|;:,.<>?";
 
+// Caracteres ambíguos que podem ser confundidos (0, O, 1, l, I, 5, S, 2, Z)
+const AMBIGUOUS_CHARS = "0O1lI5S2Z";
+
+/**
+ * Remove caracteres ambíguos de uma string
+ */
+function removeAmbiguousChars(str: string): string {
+  return str
+    .split("")
+    .filter((char) => !AMBIGUOUS_CHARS.includes(char))
+    .join("");
+}
+
+/**
+ * Gera um caractere aleatório de um conjunto, evitando repetições se necessário
+ */
+function getRandomChar(
+  charset: string,
+  usedChars: Set<string>,
+  avoidRepeated: boolean
+): string {
+  const availableChars = avoidRepeated
+    ? charset.split("").filter((char) => !usedChars.has(char))
+    : charset.split("");
+
+  if (availableChars.length === 0) {
+    // Se não houver caracteres disponíveis (todos já usados), reseta o conjunto
+    return charset[Math.floor(Math.random() * charset.length)];
+  }
+
+  return availableChars[Math.floor(Math.random() * availableChars.length)];
+}
+
 /**
  * Gera uma senha aleatória baseada nas opções fornecidas
  */
 export function generatePassword(options: PasswordOptions): string {
-  const { length, includeUppercase, includeLowercase, includeNumbers, includeSymbols } = options;
+  const {
+    length,
+    includeUppercase,
+    includeLowercase,
+    includeNumbers,
+    includeSymbols,
+    excludeAmbiguous,
+    avoidRepeated,
+    startWithUppercase,
+    endWithNumber,
+  } = options;
 
   // Validação: pelo menos um tipo de caractere deve estar habilitado
   if (!includeUppercase && !includeLowercase && !includeNumbers && !includeSymbols) {
@@ -32,42 +79,167 @@ export function generatePassword(options: PasswordOptions): string {
     throw new Error("O comprimento máximo da senha é 128 caracteres");
   }
 
+  // Validação: se startWithUppercase está ativo, deve incluir maiúsculas
+  if (startWithUppercase && !includeUppercase) {
+    throw new Error("Para iniciar com maiúscula, é necessário incluir letras maiúsculas");
+  }
+
+  // Validação: se endWithNumber está ativo, deve incluir números
+  if (endWithNumber && !includeNumbers) {
+    throw new Error("Para terminar com número, é necessário incluir números");
+  }
+
   // Constrói o conjunto de caracteres disponíveis
-  let charset = "";
-  if (includeLowercase) charset += LOWERCASE;
-  if (includeUppercase) charset += UPPERCASE;
-  if (includeNumbers) charset += NUMBERS;
-  if (includeSymbols) charset += SYMBOLS;
+  let lowercaseChars = includeLowercase ? LOWERCASE : "";
+  let uppercaseChars = includeUppercase ? UPPERCASE : "";
+  let numberChars = includeNumbers ? NUMBERS : "";
+  let symbolChars = includeSymbols ? SYMBOLS : "";
+
+  // Remove caracteres ambíguos se solicitado
+  if (excludeAmbiguous) {
+    lowercaseChars = removeAmbiguousChars(lowercaseChars);
+    uppercaseChars = removeAmbiguousChars(uppercaseChars);
+    numberChars = removeAmbiguousChars(numberChars);
+    symbolChars = removeAmbiguousChars(symbolChars);
+  }
+
+  // Validação: verifica se ainda há caracteres disponíveis após remover ambíguos
+  if (!lowercaseChars && !uppercaseChars && !numberChars && !symbolChars) {
+    throw new Error(
+      "Não há caracteres disponíveis. Tente desabilitar 'Excluir caracteres ambíguos' ou habilitar mais tipos de caracteres."
+    );
+  }
+
+  // Validação: verifica se há caracteres suficientes para evitar repetições
+  if (avoidRepeated) {
+    const totalAvailableChars =
+      lowercaseChars.length + uppercaseChars.length + numberChars.length + symbolChars.length;
+    if (length > totalAvailableChars) {
+      throw new Error(
+        `Com 'Evitar caracteres repetidos' ativado, o comprimento máximo é ${totalAvailableChars} caracteres.`
+      );
+    }
+  }
+
+  const usedChars = new Set<string>();
+  const passwordChars: string[] = new Array(length);
+
+  // Função auxiliar para obter um caractere de um conjunto específico
+  const getCharFromSet = (charSet: string): string => {
+    if (!charSet || charSet.length === 0) return "";
+    return getRandomChar(charSet, usedChars, avoidRepeated);
+  };
+
+  // Define o primeiro caractere (se necessário)
+  if (startWithUppercase) {
+    const firstChar = getCharFromSet(uppercaseChars);
+    if (firstChar) {
+      passwordChars[0] = firstChar;
+      if (avoidRepeated) usedChars.add(firstChar);
+    }
+  }
+
+  // Define o último caractere (se necessário)
+  if (endWithNumber) {
+    const lastChar = getCharFromSet(numberChars);
+    if (lastChar) {
+      passwordChars[length - 1] = lastChar;
+      if (avoidRepeated) usedChars.add(lastChar);
+    }
+  }
 
   // Garante que pelo menos um caractere de cada tipo selecionado seja incluído
-  let password = "";
-  const selectedTypes: string[] = [];
+  const requiredChars: string[] = [];
+  const reservedIndices = new Set<number>();
   
+  if (startWithUppercase) reservedIndices.add(0);
+  if (endWithNumber) reservedIndices.add(length - 1);
+
+  // Adiciona pelo menos um de cada tipo (se ainda não foi adicionado)
   if (includeLowercase) {
-    password += LOWERCASE[Math.floor(Math.random() * LOWERCASE.length)];
-    selectedTypes.push("lowercase");
+    const hasLowercase = passwordChars.some((char, idx) => 
+      char && lowercaseChars.includes(char)
+    );
+    if (!hasLowercase) {
+      const char = getCharFromSet(lowercaseChars);
+      if (char) requiredChars.push(char);
+    }
   }
-  if (includeUppercase) {
-    password += UPPERCASE[Math.floor(Math.random() * UPPERCASE.length)];
-    selectedTypes.push("uppercase");
+
+  if (includeUppercase && !startWithUppercase) {
+    const hasUppercase = passwordChars.some((char) => 
+      char && uppercaseChars.includes(char)
+    );
+    if (!hasUppercase) {
+      const char = getCharFromSet(uppercaseChars);
+      if (char) requiredChars.push(char);
+    }
   }
-  if (includeNumbers) {
-    password += NUMBERS[Math.floor(Math.random() * NUMBERS.length)];
-    selectedTypes.push("numbers");
+
+  if (includeNumbers && !endWithNumber) {
+    const hasNumber = passwordChars.some((char) => 
+      char && numberChars.includes(char)
+    );
+    if (!hasNumber) {
+      const char = getCharFromSet(numberChars);
+      if (char) requiredChars.push(char);
+    }
   }
+
   if (includeSymbols) {
-    password += SYMBOLS[Math.floor(Math.random() * SYMBOLS.length)];
-    selectedTypes.push("symbols");
+    const hasSymbol = passwordChars.some((char) => 
+      char && symbolChars.includes(char)
+    );
+    if (!hasSymbol) {
+      const char = getCharFromSet(symbolChars);
+      if (char) requiredChars.push(char);
+    }
   }
 
-  // Preenche o restante da senha com caracteres aleatórios
-  const remainingLength = length - password.length;
-  for (let i = 0; i < remainingLength; i++) {
-    password += charset[Math.floor(Math.random() * charset.length)];
+  // Constrói o charset completo
+  const fullCharset = lowercaseChars + uppercaseChars + numberChars + symbolChars;
+
+  // Preenche as posições vazias
+  let requiredIndex = 0;
+  for (let i = 0; i < length; i++) {
+    if (!passwordChars[i]) {
+      if (requiredIndex < requiredChars.length) {
+        passwordChars[i] = requiredChars[requiredIndex++];
+        if (avoidRepeated) usedChars.add(passwordChars[i]);
+      } else {
+        const char = getRandomChar(fullCharset, usedChars, avoidRepeated);
+        passwordChars[i] = char;
+        if (avoidRepeated) usedChars.add(char);
+      }
+    }
   }
 
-  // Embaralha a senha para evitar padrões previsíveis
-  return shuffleString(password);
+  // Embaralha a senha, mas preserva primeira e última posição se necessário
+  const shuffled = passwordChars.slice();
+  
+  if (startWithUppercase || endWithNumber) {
+    // Remove primeiro e último para embaralhar o resto
+    const first = startWithUppercase ? shuffled.shift() : undefined;
+    const last = endWithNumber ? shuffled.pop() : undefined;
+    
+    // Embaralha o meio
+    for (let i = shuffled.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+    }
+    
+    // Restaura primeiro e último
+    if (first) shuffled.unshift(first);
+    if (last) shuffled.push(last);
+  } else {
+    // Embaralha tudo
+    for (let i = shuffled.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+    }
+  }
+
+  return shuffled.join("");
 }
 
 /**

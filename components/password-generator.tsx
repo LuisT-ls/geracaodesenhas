@@ -16,6 +16,10 @@ export default function PasswordGenerator() {
     includeLowercase: true,
     includeNumbers: true,
     includeSymbols: true,
+    excludeAmbiguous: false,
+    avoidRepeated: false,
+    startWithUppercase: false,
+    endWithNumber: false,
   });
   const [copied, setCopied] = useState(false);
 
@@ -25,6 +29,8 @@ export default function PasswordGenerator() {
       setPassword(newPassword);
       setCopied(false);
     } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : "Erro ao gerar senha";
+      alert(errorMessage);
       console.error("Erro ao gerar senha:", error);
     }
   }, [options]);
@@ -177,6 +183,93 @@ export default function PasswordGenerator() {
               <span className="text-gray-700 dark:text-gray-300">
                 Símbolos (!@#$%...)
               </span>
+            </label>
+          </div>
+        </div>
+
+        {/* Opções Avançadas */}
+        <div className="space-y-3 border-t border-gray-200 dark:border-gray-700 pt-4">
+          <label className="text-sm font-medium text-gray-700 dark:text-gray-300 block">
+            Opções Avançadas
+          </label>
+          <div className="space-y-2">
+            <label className="flex items-center gap-3 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={options.excludeAmbiguous}
+                onChange={(e) =>
+                  setOptions((prev) => ({ ...prev, excludeAmbiguous: e.target.checked }))
+                }
+                className="w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
+                aria-label="Excluir caracteres ambíguos"
+              />
+              <div className="flex-1">
+                <span className="text-gray-700 dark:text-gray-300">
+                  Excluir caracteres ambíguos
+                </span>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                  Remove 0, O, 1, l, I, 5, S, 2, Z
+                </p>
+              </div>
+            </label>
+            <label className="flex items-center gap-3 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={options.avoidRepeated}
+                onChange={(e) =>
+                  setOptions((prev) => ({ ...prev, avoidRepeated: e.target.checked }))
+                }
+                className="w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
+                aria-label="Evitar caracteres repetidos"
+              />
+              <div className="flex-1">
+                <span className="text-gray-700 dark:text-gray-300">
+                  Evitar caracteres repetidos
+                </span>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                  Cada caractere aparece no máximo uma vez
+                </p>
+              </div>
+            </label>
+            <label className="flex items-center gap-3 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={options.startWithUppercase}
+                onChange={(e) =>
+                  setOptions((prev) => ({ ...prev, startWithUppercase: e.target.checked }))
+                }
+                disabled={!options.includeUppercase}
+                className="w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500 focus:ring-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                aria-label="Iniciar com letra maiúscula"
+              />
+              <div className="flex-1">
+                <span className="text-gray-700 dark:text-gray-300">
+                  Iniciar com letra maiúscula
+                </span>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                  Requer letras maiúsculas habilitadas
+                </p>
+              </div>
+            </label>
+            <label className="flex items-center gap-3 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={options.endWithNumber}
+                onChange={(e) =>
+                  setOptions((prev) => ({ ...prev, endWithNumber: e.target.checked }))
+                }
+                disabled={!options.includeNumbers}
+                className="w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500 focus:ring-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                aria-label="Terminar com número"
+              />
+              <div className="flex-1">
+                <span className="text-gray-700 dark:text-gray-300">
+                  Terminar com número
+                </span>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                  Requer números habilitados
+                </p>
+              </div>
             </label>
           </div>
         </div>
