@@ -17,7 +17,9 @@ export default function PasswordGenerator() {
   const [passwords, setPasswords] = useState<GeneratedPassword[]>([]);
   const [passwordCount, setPasswordCount] = useState<number>(5);
   const [currentPassword, setCurrentPassword] = useState<string>("");
-  const [showPassword, setShowPassword] = useState<boolean>(false);
+  const [currentAnalysis, setCurrentAnalysis] = useState<SecurityAnalysis | null>(null);
+  const [showPassword, setShowPassword] = useState<boolean>(true);
+  const [showSecurityAnalysis, setShowSecurityAnalysis] = useState<boolean>(false);
   const [showModal, setShowModal] = useState<boolean>(false);
   const [modalPasswordCount, setModalPasswordCount] = useState<number>(5);
   const [options, setOptions] = useState<PasswordOptions>({
@@ -38,6 +40,9 @@ export default function PasswordGenerator() {
       const password = generatePassword(options);
       const analysis = analyzePasswordSecurity(password, options);
       setCurrentPassword(password);
+      setCurrentAnalysis(analysis);
+      setShowPassword(true); // Senha visível por padrão
+      setShowSecurityAnalysis(false); // Análise oculta por padrão
       setPasswords([{ password, analysis }]);
       setCopiedIndex(null);
     } catch (error) {
@@ -324,7 +329,7 @@ export default function PasswordGenerator() {
 
       {/* Campo de Senha Gerada */}
       {currentPassword && (
-        <div className="bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg p-4">
+        <div className="bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg p-4 space-y-4">
           <div className="flex items-center gap-3">
             <input
               type={showPassword ? "text" : "password"}
@@ -376,6 +381,354 @@ export default function PasswordGenerator() {
               </button>
             </div>
           </div>
+
+          {/* Análise de Força da Senha */}
+          {currentAnalysis && (
+            <div className="border-t border-gray-200 dark:border-gray-700 pt-4 space-y-4">
+              {/* Título e Barra de Força */}
+              <div className="space-y-2">
+                <div className="flex items-center gap-2">
+                  <svg
+                    className="w-5 h-5 text-blue-600 dark:text-blue-400"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                    aria-hidden="true"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
+                    />
+                  </svg>
+                  <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100">
+                    Força da Senha:
+                  </h3>
+                </div>
+                <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+                  <div
+                    className={`h-full transition-all duration-500 ${
+                      currentAnalysis.strength >= 90
+                        ? "bg-green-500"
+                        : currentAnalysis.strength >= 70
+                        ? "bg-yellow-500"
+                        : currentAnalysis.strength >= 50
+                        ? "bg-orange-500"
+                        : "bg-red-500"
+                    }`}
+                    style={{ width: `${currentAnalysis.strength}%` }}
+                    aria-hidden="true"
+                  />
+                </div>
+                <div className="flex items-center justify-between">
+                  <p className={`text-sm font-medium ${currentAnalysis.strengthColor}`}>
+                    Força {currentAnalysis.strengthLabel}
+                  </p>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">
+                    {currentAnalysis.entropy} bits
+                  </p>
+                </div>
+              </div>
+
+              {/* Análise de Segurança (Expandível) */}
+              <div className="space-y-3">
+                <button
+                  onClick={() => setShowSecurityAnalysis(!showSecurityAnalysis)}
+                  className="w-full flex items-center gap-2 text-sm font-semibold text-gray-900 dark:text-gray-100 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+                >
+                  <svg
+                    className={`w-4 h-4 transition-transform ${showSecurityAnalysis ? "rotate-180" : ""}`}
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M5 15l7-7 7 7"
+                    />
+                  </svg>
+                  Análise de Segurança
+                </button>
+
+                {showSecurityAnalysis && (
+                  <div className="space-y-3 pl-6">
+                    {/* Critérios Atendidos */}
+                    <div className="space-y-2">
+                      {/* Comprimento */}
+                      <div className="flex items-center gap-2">
+                        <svg
+                          className="w-5 h-5 text-green-500 flex-shrink-0"
+                          fill="currentColor"
+                          viewBox="0 0 20 20"
+                        >
+                          <path
+                            fillRule="evenodd"
+                            d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                            clipRule="evenodd"
+                          />
+                        </svg>
+                        <span className="text-sm text-gray-700 dark:text-gray-300">
+                          {currentPassword.length} caracteres -{" "}
+                          {currentPassword.length >= 12
+                            ? "bom comprimento"
+                            : currentPassword.length >= 8
+                            ? "comprimento adequado"
+                            : "comprimento curto"}
+                        </span>
+                      </div>
+
+                      {/* Letras Maiúsculas */}
+                      {/[A-Z]/.test(currentPassword) ? (
+                        <div className="flex items-center gap-2">
+                          <svg
+                            className="w-5 h-5 text-green-500 flex-shrink-0"
+                            fill="currentColor"
+                            viewBox="0 0 20 20"
+                          >
+                            <path
+                              fillRule="evenodd"
+                              d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                              clipRule="evenodd"
+                            />
+                          </svg>
+                          <span className="text-sm text-gray-700 dark:text-gray-300">
+                            Inclui letras maiúsculas
+                          </span>
+                        </div>
+                      ) : (
+                        <div className="flex items-center gap-2">
+                          <svg
+                            className="w-5 h-5 text-red-500 flex-shrink-0"
+                            fill="currentColor"
+                            viewBox="0 0 20 20"
+                          >
+                            <path
+                              fillRule="evenodd"
+                              d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+                              clipRule="evenodd"
+                            />
+                          </svg>
+                          <span className="text-sm text-gray-700 dark:text-gray-300">
+                            Não inclui letras maiúsculas
+                          </span>
+                        </div>
+                      )}
+
+                      {/* Letras Minúsculas */}
+                      {/[a-z]/.test(currentPassword) ? (
+                        <div className="flex items-center gap-2">
+                          <svg
+                            className="w-5 h-5 text-green-500 flex-shrink-0"
+                            fill="currentColor"
+                            viewBox="0 0 20 20"
+                          >
+                            <path
+                              fillRule="evenodd"
+                              d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                              clipRule="evenodd"
+                            />
+                          </svg>
+                          <span className="text-sm text-gray-700 dark:text-gray-300">
+                            Inclui letras minúsculas
+                          </span>
+                        </div>
+                      ) : (
+                        <div className="flex items-center gap-2">
+                          <svg
+                            className="w-5 h-5 text-red-500 flex-shrink-0"
+                            fill="currentColor"
+                            viewBox="0 0 20 20"
+                          >
+                            <path
+                              fillRule="evenodd"
+                              d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+                              clipRule="evenodd"
+                            />
+                          </svg>
+                          <span className="text-sm text-gray-700 dark:text-gray-300">
+                            Não inclui letras minúsculas
+                          </span>
+                        </div>
+                      )}
+
+                      {/* Números */}
+                      {/[0-9]/.test(currentPassword) ? (
+                        <div className="flex items-center gap-2">
+                          <svg
+                            className="w-5 h-5 text-green-500 flex-shrink-0"
+                            fill="currentColor"
+                            viewBox="0 0 20 20"
+                          >
+                            <path
+                              fillRule="evenodd"
+                              d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                              clipRule="evenodd"
+                            />
+                          </svg>
+                          <span className="text-sm text-gray-700 dark:text-gray-300">
+                            Inclui números
+                          </span>
+                        </div>
+                      ) : (
+                        <div className="flex items-center gap-2">
+                          <svg
+                            className="w-5 h-5 text-red-500 flex-shrink-0"
+                            fill="currentColor"
+                            viewBox="0 0 20 20"
+                          >
+                            <path
+                              fillRule="evenodd"
+                              d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+                              clipRule="evenodd"
+                            />
+                          </svg>
+                          <span className="text-sm text-gray-700 dark:text-gray-300">
+                            Não inclui números
+                          </span>
+                        </div>
+                      )}
+
+                      {/* Símbolos */}
+                      {/[^a-zA-Z0-9]/.test(currentPassword) ? (
+                        <div className="flex items-center gap-2">
+                          <svg
+                            className="w-5 h-5 text-green-500 flex-shrink-0"
+                            fill="currentColor"
+                            viewBox="0 0 20 20"
+                          >
+                            <path
+                              fillRule="evenodd"
+                              d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                              clipRule="evenodd"
+                            />
+                          </svg>
+                          <span className="text-sm text-gray-700 dark:text-gray-300">
+                            Inclui símbolos especiais
+                          </span>
+                        </div>
+                      ) : (
+                        <div className="flex items-center gap-2">
+                          <svg
+                            className="w-5 h-5 text-red-500 flex-shrink-0"
+                            fill="currentColor"
+                            viewBox="0 0 20 20"
+                          >
+                            <path
+                              fillRule="evenodd"
+                              d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+                              clipRule="evenodd"
+                            />
+                          </svg>
+                          <span className="text-sm text-gray-700 dark:text-gray-300">
+                            Não inclui símbolos especiais
+                          </span>
+                        </div>
+                      )}
+
+                      {/* Padrão Comum */}
+                      {/^[A-Z]/.test(currentPassword) && /[0-9]$/.test(currentPassword) && (
+                        <div className="flex items-center gap-2">
+                          <svg
+                            className="w-5 h-5 text-yellow-500 flex-shrink-0"
+                            fill="currentColor"
+                            viewBox="0 0 20 20"
+                          >
+                            <path
+                              fillRule="evenodd"
+                              d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
+                              clipRule="evenodd"
+                            />
+                          </svg>
+                          <span className="text-sm text-gray-700 dark:text-gray-300">
+                            Padrão comum: começa com maiúscula e termina com número
+                          </span>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Sugestões de Melhoria */}
+                    {(() => {
+                      const suggestions: string[] = [];
+                      
+                      if (!/[A-Z]/.test(currentPassword)) {
+                        suggestions.push("Adicione letras maiúsculas para aumentar a segurança");
+                      }
+                      if (!/[a-z]/.test(currentPassword)) {
+                        suggestions.push("Adicione letras minúsculas para aumentar a segurança");
+                      }
+                      if (!/[0-9]/.test(currentPassword)) {
+                        suggestions.push("Adicione números para aumentar a segurança");
+                      }
+                      if (!/[^a-zA-Z0-9]/.test(currentPassword)) {
+                        suggestions.push("Adicione símbolos especiais (!@#$%...) para aumentar a segurança");
+                      }
+                      if (currentPassword.length < 12) {
+                        suggestions.push(`Aumente o comprimento para pelo menos 12 caracteres (atual: ${currentPassword.length})`);
+                      }
+                      if (currentPassword.length < 16 && currentPassword.length >= 12) {
+                        suggestions.push("Considere aumentar para 16 ou mais caracteres para máxima segurança");
+                      }
+                      
+                      return suggestions.length > 0 ? (
+                        <div className="pt-2 border-t border-gray-200 dark:border-gray-700 space-y-2">
+                          <h4 className="text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide">
+                            Sugestões para Melhorar
+                          </h4>
+                          <ul className="space-y-1.5">
+                            {suggestions.map((suggestion, index) => (
+                              <li key={index} className="flex items-start gap-2 text-xs text-gray-600 dark:text-gray-400">
+                                <svg
+                                  className="w-4 h-4 text-blue-500 flex-shrink-0 mt-0.5"
+                                  fill="currentColor"
+                                  viewBox="0 0 20 20"
+                                >
+                                  <path
+                                    fillRule="evenodd"
+                                    d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"
+                                    clipRule="evenodd"
+                                  />
+                                </svg>
+                                <span>{suggestion}</span>
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      ) : null;
+                    })()}
+
+                    {/* Tempo Estimado */}
+                    <div className="pt-2 border-t border-gray-200 dark:border-gray-700 space-y-1">
+                      <div className="flex items-center gap-2">
+                        <svg
+                          className="w-5 h-5 text-blue-500 flex-shrink-0"
+                          fill="currentColor"
+                          viewBox="0 0 20 20"
+                        >
+                          <path
+                            fillRule="evenodd"
+                            d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"
+                            clipRule="evenodd"
+                          />
+                        </svg>
+                        <span className="text-sm text-gray-700 dark:text-gray-300">
+                          Tempo estimado para quebrar (ataque online):{" "}
+                          <span className="text-blue-600 dark:text-blue-400 font-medium">
+                            {currentAnalysis.timeToCrack.online}
+                          </span>
+                        </span>
+                      </div>
+                      <p className="text-xs text-gray-500 dark:text-gray-400 pl-7">
+                        Baseado em 100 tentativas/segundo. Ataques offline podem ser muito mais rápidos.
+                      </p>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
         </div>
       )}
 

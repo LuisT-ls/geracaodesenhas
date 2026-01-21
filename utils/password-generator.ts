@@ -305,6 +305,36 @@ export interface SecurityAnalysis {
 }
 
 /**
+ * Calcula o tempo de quebra usando logaritmos para evitar overflow
+ * Fórmula: tempo = 2^(entropy - 1) / attackSpeed
+ * Usando logaritmos: log10(tempo) = (entropy - 1) * log10(2) - log10(attackSpeed)
+ * 
+ * Nota: Esta fórmula assume que a senha foi gerada aleatoriamente e uniformemente
+ * do espaço de caracteres disponível. Senhas reais podem ter entropia efetiva menor
+ * devido a padrões, palavras comuns, etc.
+ */
+function calculateCrackTime(entropy: number, attackSpeed: number): number {
+  if (entropy <= 0) return 0;
+  
+  // Para evitar overflow, usamos logaritmos
+  // log10(tempo) = (entropy - 1) * log10(2) - log10(attackSpeed)
+  const log10Time = (entropy - 1) * Math.log10(2) - Math.log10(attackSpeed);
+  
+  // Se o logaritmo for muito grande, retornamos um número muito grande
+  if (log10Time > 308) {
+    // JavaScript Number.MAX_VALUE é aproximadamente 1.79e308
+    return Number.MAX_VALUE;
+  }
+  
+  // Verificar se o resultado é válido
+  if (log10Time < -308) {
+    return 0;
+  }
+  
+  return Math.pow(10, log10Time);
+}
+
+/**
  * Formata o tempo em uma string legível
  */
 function formatTime(seconds: number): string {
@@ -318,15 +348,35 @@ function formatTime(seconds: number): string {
   if (hours < 24) return `${Math.round(hours)} horas`;
   
   const days = hours / 24;
-  if (days < 365) return `${Math.round(days)} dias`;
+  if (days < 365) {
+    if (days < 30) return `${Math.round(days)} dias`;
+    const months = days / 30;
+    return `${Math.round(months * 10) / 10} meses`;
+  }
   
-  const years = days / 365;
-  if (years < 1000) return `${Math.round(years * 10) / 10} anos`;
+  const years = days / 365.25; // Considerando anos bissextos
+  if (years < 1000) {
+    if (years < 100) return `${Math.round(years * 10) / 10} anos`;
+    return `${Math.round(years)} anos`;
+  }
   
   const millennia = years / 1000;
-  if (millennia < 1000000) return `${Math.round(millennia * 10) / 10} milênios`;
+  if (millennia < 1000000) {
+    if (millennia < 1000) return `${Math.round(millennia * 10) / 10} milênios`;
+    return `${Math.round(millennia)} milênios`;
+  }
   
-  return `${Math.round(millennia / 1000000 * 10) / 10} milhões de anos`;
+  const millions = millennia / 1000000;
+  if (millions < 1000) {
+    return `${Math.round(millions * 10) / 10} milhões de anos`;
+  }
+  
+  const billions = millions / 1000;
+  if (billions < 1000) {
+    return `${Math.round(billions * 10) / 10} bilhões de anos`;
+  }
+  
+  return "trilhões de anos ou mais";
 }
 
 /**
@@ -340,18 +390,22 @@ export function analyzePasswordSecurity(
   const strength = calculatePasswordStrength(password);
   const strengthInfo = getPasswordStrengthLabel(strength);
 
-  // Número de combinações possíveis
-  const combinations = Math.pow(2, entropy);
-
   // Velocidades de tentativas (tentativas por segundo)
-  const ONLINE_ATTACK = 100; // Ataque online típico
-  const OFFLINE_ATTACK = 1e9; // Ataque offline com hash (1 bilhão)
-  const GPU_ATTACK = 1e11; // Ataque com GPU (100 bilhões)
+  // Baseado em benchmarks reais de ataques de força bruta
+  const ONLINE_ATTACK = 100; // Ataque online típico (rate-limited por servidor)
+  const OFFLINE_ATTACK = 1e9; // Ataque offline com hash fraco como MD5/SHA1 (1 bilhão/seg)
+  const GPU_ATTACK = 1e11; // Ataque com cluster de GPUs modernas (100 bilhões/seg)
+  
+  // Nota: Velocidades podem variar significativamente:
+  // - Hash bcrypt/Argon2: muito mais lento (milhares de vezes)
+  // - Ataques online: limitados por rate limiting (pode ser < 10/seg)
+  // - GPUs modernas: podem chegar a 1 trilhão/seg para hashes fracos
 
-  // Tempo estimado = combinações / velocidade / 2 (média estatística)
-  const timeOnline = combinations / (2 * ONLINE_ATTACK);
-  const timeOffline = combinations / (2 * OFFLINE_ATTACK);
-  const timeGpu = combinations / (2 * GPU_ATTACK);
+  // Tempo médio estimado = 2^(entropy - 1) / attackSpeed
+  // Usando logaritmos para evitar overflow com números muito grandes
+  const timeOnline = calculateCrackTime(entropy, ONLINE_ATTACK);
+  const timeOffline = calculateCrackTime(entropy, OFFLINE_ATTACK);
+  const timeGpu = calculateCrackTime(entropy, GPU_ATTACK);
 
   return {
     entropy: Math.round(entropy * 10) / 10,
