@@ -112,7 +112,7 @@ export default function Home() {
           <div className="h-1 w-20 bg-blue-600 dark:bg-blue-400"></div>
         </div>
         <ToolsContainer />
-        <section className="mt-12 text-center" aria-labelledby="security-tips-heading">
+        <section className="mt-12 mb-12 text-center" aria-labelledby="security-tips-heading">
           <div className="bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg p-6 max-w-2xl mx-auto">
             <h2 id="security-tips-heading" className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-3">
               Dicas de Segurança
