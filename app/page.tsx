@@ -1,9 +1,9 @@
-import PasswordGenerator from "@/components/password-generator";
+import ToolsContainer from "@/components/tools-container";
 
 export default function Home() {
   return (
     <main className="min-h-screen bg-gray-50 dark:bg-gray-900 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-4xl mx-auto">
+      <div className="max-w-6xl mx-auto">
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-2 flex items-center gap-3">
             <svg
@@ -20,11 +20,11 @@ export default function Home() {
                 d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
               />
             </svg>
-            Gerador de Senha
+            Ferramentas de Senha
           </h1>
           <div className="h-1 w-20 bg-blue-600 dark:bg-blue-400"></div>
         </div>
-        <PasswordGenerator />
+        <ToolsContainer />
         <div className="mt-12 text-center">
           <div className="bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg p-6 max-w-2xl mx-auto">
             <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-3">
