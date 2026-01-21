@@ -1,12 +1,57 @@
 "use client";
 
-import { useState } from "react";
-import PasswordGenerator from "./password-generator";
-import PasswordAnalyzer from "./password-analyzer";
-import WifiGenerator from "./wifi-generator";
-import PinGenerator from "./pin-generator";
-import PassphraseGenerator from "./passphrase-generator";
-import SecurityGlossary from "./security-glossary";
+import { useState, Suspense } from "react";
+import dynamic from "next/dynamic";
+
+// Lazy load all components - only load when tab is active
+// This reduces initial bundle size significantly
+const PasswordGenerator = dynamic(() => import("./password-generator"), {
+  loading: () => (
+    <div className="p-6 flex items-center justify-center min-h-[400px]">
+      <div className="animate-pulse text-gray-400">Carregando...</div>
+    </div>
+  ),
+});
+
+const PasswordAnalyzer = dynamic(() => import("./password-analyzer"), {
+  loading: () => (
+    <div className="p-6 flex items-center justify-center min-h-[400px]">
+      <div className="animate-pulse text-gray-400">Carregando...</div>
+    </div>
+  ),
+});
+
+const WifiGenerator = dynamic(() => import("./wifi-generator"), {
+  loading: () => (
+    <div className="p-6 flex items-center justify-center min-h-[400px]">
+      <div className="animate-pulse text-gray-400">Carregando...</div>
+    </div>
+  ),
+});
+
+const PinGenerator = dynamic(() => import("./pin-generator"), {
+  loading: () => (
+    <div className="p-6 flex items-center justify-center min-h-[400px]">
+      <div className="animate-pulse text-gray-400">Carregando...</div>
+    </div>
+  ),
+});
+
+const PassphraseGenerator = dynamic(() => import("./passphrase-generator"), {
+  loading: () => (
+    <div className="p-6 flex items-center justify-center min-h-[400px]">
+      <div className="animate-pulse text-gray-400">Carregando...</div>
+    </div>
+  ),
+});
+
+const SecurityGlossary = dynamic(() => import("./security-glossary"), {
+  loading: () => (
+    <div className="p-6 flex items-center justify-center min-h-[400px]">
+      <div className="animate-pulse text-gray-400">Carregando...</div>
+    </div>
+  ),
+});
 
 type TabType = "generator" | "analyzer" | "wifi" | "pin" | "passphrase" | "glossary";
 
@@ -46,12 +91,20 @@ export default function ToolsContainer() {
 
       {/* Content */}
       <div className="bg-white dark:bg-gray-800 border-x border-b border-gray-300 dark:border-gray-700 rounded-b-lg">
-        {activeTab === "generator" && <PasswordGenerator />}
-        {activeTab === "analyzer" && <PasswordAnalyzer />}
-        {activeTab === "wifi" && <WifiGenerator />}
-        {activeTab === "pin" && <PinGenerator />}
-        {activeTab === "passphrase" && <PassphraseGenerator />}
-        {activeTab === "glossary" && <SecurityGlossary />}
+        <Suspense
+          fallback={
+            <div className="p-6 flex items-center justify-center min-h-[400px]">
+              <div className="animate-pulse text-gray-400">Carregando...</div>
+            </div>
+          }
+        >
+          {activeTab === "generator" && <PasswordGenerator />}
+          {activeTab === "analyzer" && <PasswordAnalyzer />}
+          {activeTab === "wifi" && <WifiGenerator />}
+          {activeTab === "pin" && <PinGenerator />}
+          {activeTab === "passphrase" && <PassphraseGenerator />}
+          {activeTab === "glossary" && <SecurityGlossary />}
+        </Suspense>
       </div>
     </div>
   );
