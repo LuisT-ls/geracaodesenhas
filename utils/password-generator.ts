@@ -255,6 +255,118 @@ function shuffleString(str: string): string {
 }
 
 /**
+ * Calcula a entropia da senha em bits
+ * Entropia = log2(charset_size^password_length)
+ */
+export function calculateEntropy(password: string, options: PasswordOptions): number {
+  let charsetSize = 0;
+
+  let lowercaseChars = options.includeLowercase ? LOWERCASE : "";
+  let uppercaseChars = options.includeUppercase ? UPPERCASE : "";
+  let numberChars = options.includeNumbers ? NUMBERS : "";
+  let symbolChars = options.includeSymbols ? SYMBOLS : "";
+
+  if (options.excludeAmbiguous) {
+    lowercaseChars = removeAmbiguousChars(lowercaseChars);
+    uppercaseChars = removeAmbiguousChars(uppercaseChars);
+    numberChars = removeAmbiguousChars(numberChars);
+    symbolChars = removeAmbiguousChars(symbolChars);
+  }
+
+  charsetSize = lowercaseChars.length + uppercaseChars.length + numberChars.length + symbolChars.length;
+
+  if (charsetSize === 0) return 0;
+
+  // Se evitar repetidos, a entropia é menor
+  if (options.avoidRepeated) {
+    const uniqueChars = new Set(password.split("")).size;
+    // Aproximação: entropia baseada em caracteres únicos disponíveis
+    const availableChars = Math.min(charsetSize, password.length);
+    return Math.log2(Math.pow(availableChars, password.length));
+  }
+
+  return password.length * Math.log2(charsetSize);
+}
+
+/**
+ * Estima o tempo necessário para quebrar a senha
+ * Baseado em diferentes velocidades de tentativas
+ */
+export interface SecurityAnalysis {
+  entropy: number;
+  timeToCrack: {
+    online: string; // 100 tentativas/segundo (ataque online)
+    offline: string; // 1 bilhão tentativas/segundo (ataque offline com hash)
+    gpu: string; // 100 bilhões tentativas/segundo (ataque com GPU)
+  };
+  strength: number;
+  strengthLabel: string;
+  strengthColor: string;
+}
+
+/**
+ * Formata o tempo em uma string legível
+ */
+function formatTime(seconds: number): string {
+  if (seconds < 1) return "menos de 1 segundo";
+  if (seconds < 60) return `${Math.round(seconds)} segundos`;
+  
+  const minutes = seconds / 60;
+  if (minutes < 60) return `${Math.round(minutes)} minutos`;
+  
+  const hours = minutes / 60;
+  if (hours < 24) return `${Math.round(hours)} horas`;
+  
+  const days = hours / 24;
+  if (days < 365) return `${Math.round(days)} dias`;
+  
+  const years = days / 365;
+  if (years < 1000) return `${Math.round(years * 10) / 10} anos`;
+  
+  const millennia = years / 1000;
+  if (millennia < 1000000) return `${Math.round(millennia * 10) / 10} milênios`;
+  
+  return `${Math.round(millennia / 1000000 * 10) / 10} milhões de anos`;
+}
+
+/**
+ * Analisa a segurança de uma senha
+ */
+export function analyzePasswordSecurity(
+  password: string,
+  options: PasswordOptions
+): SecurityAnalysis {
+  const entropy = calculateEntropy(password, options);
+  const strength = calculatePasswordStrength(password);
+  const strengthInfo = getPasswordStrengthLabel(strength);
+
+  // Número de combinações possíveis
+  const combinations = Math.pow(2, entropy);
+
+  // Velocidades de tentativas (tentativas por segundo)
+  const ONLINE_ATTACK = 100; // Ataque online típico
+  const OFFLINE_ATTACK = 1e9; // Ataque offline com hash (1 bilhão)
+  const GPU_ATTACK = 1e11; // Ataque com GPU (100 bilhões)
+
+  // Tempo estimado = combinações / velocidade / 2 (média estatística)
+  const timeOnline = combinations / (2 * ONLINE_ATTACK);
+  const timeOffline = combinations / (2 * OFFLINE_ATTACK);
+  const timeGpu = combinations / (2 * GPU_ATTACK);
+
+  return {
+    entropy: Math.round(entropy * 10) / 10,
+    timeToCrack: {
+      online: formatTime(timeOnline),
+      offline: formatTime(timeOffline),
+      gpu: formatTime(timeGpu),
+    },
+    strength,
+    strengthLabel: strengthInfo.label,
+    strengthColor: strengthInfo.color,
+  };
+}
+
+/**
  * Calcula a força da senha (0-100)
  */
 export function calculatePasswordStrength(password: string): number {
